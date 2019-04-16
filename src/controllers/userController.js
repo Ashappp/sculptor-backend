@@ -14,19 +14,46 @@ newUser.save((err,doc)=>{
             message:err.message
         })
     }
-    res.json(doc);
+
+     if(doc) res.status(201).json({
+        success:true,
+        message:"user created successfully",
+    });
+
+    if(!doc) res.status(204).json({
+        success:false,
+        message:"user not  created",
+    });
+
 });
 }
 
 module.exports.login = async (req,res) => {
     const email = req.body.email
+   
+      try{
+        const user = await User.findOne({email},(err,user)=>{
+            if(!user){
+                return res.status(400).json({
+                    message:"user not found"
+                })
+            }
+            res.status(200).json({
+            user:{
+                id:user.id,
+                token:"sdgfsdg"
+            },
+            'success': true,
+            "message":"User in DB"
+            })
 
-    const user = await User.findOne({email})
-    .lean()
-    .exec()
-    console.log(user)
-    res.status(200).send("sdfsd")
-}
+      })} catch(err){
+        res.json({
+            'success': false,
+            "message":"User don't in DB"
+        })
+
+    }}
 
 module.exports.logout = ((req,res) => {
     res.json({
@@ -37,7 +64,9 @@ module.exports.logout = ((req,res) => {
 
 module.exports.updatePassword = ((req,res)=>{
     const id = req.body.id
-    const user = User.findByIdAndUpdate({ _id: id },{password:'sdf34342'},{new:true},(err,doc)=>{
+    const password = req.body.password
+    const email = req.body.email
+    const user = User.findOneAndUpdate({email},{password:password},{new:true},(err,doc)=>{
         if(err) console.log(err);
         bcrypt.hash(doc.password,12,(err, hash)=>{
                 if(err) return console.log(err);
